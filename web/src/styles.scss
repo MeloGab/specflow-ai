@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  font-family: 'DM Sans', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f7f8fb;
+  color-scheme: light;
+  font-synthesis: none;
+}
+
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; }
+button, textarea { font-family: inherit; }
+::selection { background: #dcd5ff; color: #2b215f; }

@@ -1,0 +1,232 @@
+<header class="topbar">
+  <a class="brand" href="#top" aria-label="SpecFlow AI — início">
+    <span class="brand-mark">S</span>
+    <span>SpecFlow <strong>AI</strong></span>
+  </a>
+  <span class="status"><i></i> PoC · Spec-Driven</span>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="eyebrow">Da intenção à especificação</div>
+    <h1>Transforme uma demanda em um plano técnico <em>verificável.</em></h1>
+    <p>
+      A IA propõe. O engenheiro questiona, valida e decide. O resultado nasce estruturado
+      para revisão, testes e evolução segura.
+    </p>
+  </section>
+
+  <section class="provider-panel" aria-labelledby="provider-title">
+    <div class="section-heading">
+      <div>
+        <span class="step">01</span>
+        <h2 id="provider-title">Escolha o motor de IA</h2>
+      </div>
+      <span class="counter">por requisição</span>
+    </div>
+
+    @if (providersLoading()) {
+      <p class="provider-loading">Consultando os provedores disponíveis...</p>
+    } @else {
+      <div class="provider-grid">
+        @for (provider of providers(); track provider.id) {
+          <article
+            class="provider-card"
+            [class.selected]="selectedProviderId() === provider.id"
+            [class.unavailable]="!provider.available"
+          >
+            <button
+              class="provider-choice"
+              type="button"
+              (click)="selectProvider(provider)"
+              [attr.aria-pressed]="selectedProviderId() === provider.id"
+            >
+              <span class="provider-card-header">
+                <span class="provider-mark">{{ provider.name.charAt(0) }}</span>
+                <span class="provider-state" [class.ready]="provider.available">
+                  {{ provider.available ? 'disponível' : 'configurar' }}
+                </span>
+              </span>
+              <strong>{{ provider.name }}</strong>
+              <small>{{ provider.model }}</small>
+              <p>{{ provider.description }}</p>
+              <span class="data-destination">Dados → {{ provider.dataDestination }}</span>
+            </button>
+
+            @if (provider.id === 'GitHubCopilot') {
+              <div class="provider-auth">
+                @if (provider.authenticated) {
+                  <span>Conectado como <strong>{{ provider.account }}</strong></span>
+                  <button class="text-button" type="button" (click)="logoutGitHub()">
+                    Sair
+                  </button>
+                } @else {
+                  <button
+                    class="github-button"
+                    type="button"
+                    (click)="loginWithGitHub()"
+                    [disabled]="!provider.available"
+                  >
+                    Entrar com GitHub
+                  </button>
+                }
+              </div>
+            }
+
+            @if (selectedProviderId() === provider.id && provider.message) {
+              <p class="provider-message">{{ provider.message }}</p>
+            }
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="workspace" aria-labelledby="demand-title">
+    <div class="section-heading">
+      <div>
+        <span class="step">02</span>
+        <h2 id="demand-title">Demanda de negócio</h2>
+      </div>
+      <span class="counter">{{ demand.value.length }} / 5.000</span>
+    </div>
+
+    <textarea
+      [formControl]="demand"
+      aria-label="Demanda de negócio"
+      placeholder="Descreva a regra, o comportamento esperado e as restrições conhecidas..."
+      rows="7"
+    ></textarea>
+
+    @if (demand.touched && demand.invalid) {
+      <p class="error-message">A demanda deve ter entre 20 e 5.000 caracteres.</p>
+    }
+    @if (error()) {
+      <p class="error-message">{{ error() }}</p>
+    }
+
+    <div class="action-row">
+      <div>
+        <p><span>Privacidade:</span> não envie dados pessoais ou credenciais.</p>
+        @if (selectedProvider(); as provider) {
+          <p><span>Destino:</span> {{ provider.dataDestination }}</p>
+        }
+      </div>
+      <button
+        type="button"
+        (click)="generate()"
+        [disabled]="loading() || demand.invalid || !canGenerate()"
+      >
+        @if (loading()) {
+          <span class="spinner" aria-hidden="true"></span> Analisando demanda
+        } @else {
+          Gerar especificação <span aria-hidden="true">→</span>
+        }
+      </button>
+    </div>
+  </section>
+
+  @if (result(); as document) {
+    <section class="result" aria-live="polite">
+      <div class="result-header">
+        <div>
+          <span class="step">03</span>
+          <h2>Especificação técnica</h2>
+        </div>
+        <div class="metadata">
+          <span>{{ document.generator }}</span>
+          <span>{{ document.model }}</span>
+          <span>schema v{{ document.schemaVersion }}</span>
+        </div>
+      </div>
+
+      <article class="summary-card">
+        <span class="card-label">Resumo</span>
+        <p>{{ document.specification.summary }}</p>
+      </article>
+
+      <div class="grid two-columns">
+        <article class="card">
+          <span class="card-label">Regras de negócio</span>
+          <ul class="checked-list">
+            @for (rule of document.specification.businessRules; track rule) {
+              <li>{{ rule }}</li>
+            }
+          </ul>
+        </article>
+
+        <article class="card questions">
+          <span class="card-label">Dúvidas para o negócio</span>
+          <ul>
+            @for (question of document.specification.openQuestions; track question) {
+              <li>{{ question }}</li>
+            }
+          </ul>
+        </article>
+      </div>
+
+      <article class="card api-card">
+        <div class="api-title">
+          <span class="method">{{ document.specification.suggestedApi.method }}</span>
+          <code>{{ document.specification.suggestedApi.route }}</code>
+        </div>
+        <p>{{ document.specification.suggestedApi.purpose }}</p>
+        <div class="api-details">
+          <div>
+            <h3>Validações</h3>
+            <ul>
+              @for (validation of document.specification.suggestedApi.validations; track validation) {
+                <li>{{ validation }}</li>
+              }
+            </ul>
+          </div>
+          <div>
+            <h3>Respostas</h3>
+            <ul>
+              @for (response of document.specification.suggestedApi.responses; track response) {
+                <li><code>{{ response }}</code></li>
+              }
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <div class="grid two-columns">
+        <article class="card">
+          <span class="card-label">Critérios de aceite</span>
+          <div class="gherkin-list">
+            @for (criterion of document.specification.acceptanceCriteria; track $index) {
+              <div class="gherkin">
+                <p><b>Dado</b> {{ criterion.given }}</p>
+                <p><b>Quando</b> {{ criterion.when }}</p>
+                <p><b>Então</b> {{ criterion.then }}</p>
+              </div>
+            }
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="card-label">Cenários de teste</span>
+          <div class="scenario-list">
+            @for (scenario of document.specification.testScenarios; track scenario.name) {
+              <div class="scenario">
+                <div><strong>{{ scenario.name }}</strong><span>{{ scenario.type }}</span></div>
+                <p>{{ scenario.then }}</p>
+              </div>
+            }
+          </div>
+        </article>
+      </div>
+
+      <aside class="review-note">
+        <strong>Checkpoint humano</strong>
+        <span>Esta especificação é uma proposta. Dúvidas abertas e regras críticas devem ser validadas antes da implementação.</span>
+      </aside>
+    </section>
+  }
+</main>
+
+<footer>
+  <span>SpecFlow AI</span>
+  <span>Engenharia assistida, responsabilidade humana.</span>
+</footer>

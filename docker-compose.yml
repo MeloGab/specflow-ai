@@ -1,0 +1,27 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/SpecFlowAI.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      AI__DefaultProvider: Ollama
+      AI__Ollama__Endpoint: ${OLLAMA_ENDPOINT:-http://host.docker.internal:11434}
+      AI__Ollama__Model: ${OLLAMA_MODEL:-llama3.2}
+      AI__OpenAI__ApiKey: ${OPENAI_API_KEY:-}
+      GitHubOAuth__ClientId: ${GITHUB_OAUTH_CLIENT_ID:-}
+      GitHubOAuth__ClientSecret: ${GITHUB_OAUTH_CLIENT_SECRET:-}
+      GitHubOAuth__FrontendUrl: http://localhost:4200
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "5130:8080"
+
+  web:
+    build:
+      context: web
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "4200:80"

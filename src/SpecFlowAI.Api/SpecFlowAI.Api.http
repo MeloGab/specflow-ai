@@ -1,0 +1,15 @@
+@SpecFlowAI.Api_HostAddress = http://localhost:5130
+
+GET {{SpecFlowAI.Api_HostAddress}}/api/health
+Accept: application/json
+
+###
+
+POST {{SpecFlowAI.Api_HostAddress}}/api/specifications
+Content-Type: application/json
+
+{
+  "businessDemand": "Ao cancelar uma apólice antes de 7 dias, o cliente deve receber estorno integral. Após 7 dias, o estorno deve ser proporcional. Apólices com sinistro aberto não podem ser canceladas."
+}
+
+###
